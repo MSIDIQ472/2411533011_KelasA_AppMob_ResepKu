@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:appmob_resepku/models/recipes.dart';
 import 'package:appmob_resepku/providers/favorite_provider.dart';
+import 'package:appmob_resepku/widgets/recipe_image.dart';
 import 'package:provider/provider.dart';
 
 class DetailPage extends StatefulWidget {
@@ -51,17 +52,10 @@ class _DetailPageState extends State<DetailPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                recipe.image,
-                width: double.infinity,
-                height: 220,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => const SizedBox(
-                  width: double.infinity,
-                  height: 220,
-                  child: Center(child: Icon(Icons.restaurant, size: 64)),
-                ),
+              borderRadius: BorderRadius.circular(16),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: RecipeImage(url: recipe.image),
               ),
             ),
             const SizedBox(height: 16),

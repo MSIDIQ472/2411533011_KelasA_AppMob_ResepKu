@@ -28,8 +28,10 @@ void main() {
     expect(find.text('4 porsi'), findsOneWidget);
     expect(find.text('1200 kkal total'), findsOneWidget);
 
+    await tester.ensureVisible(find.byTooltip('Tambah porsi'));
     await tester.tap(find.byTooltip('Tambah porsi'));
     await tester.pump();
+    await tester.ensureVisible(find.byTooltip('Tambah porsi'));
     await tester.tap(find.byTooltip('Tambah porsi'));
     await tester.pump();
 
@@ -74,7 +76,7 @@ void main() {
 
     await tester.tap(find.byTooltip('Hapus semua favorit'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Hapus semua'));
+    await tester.tap(find.text('Hapus semua').last);
     await tester.pumpAndSettle();
     expect(find.text('Belum ada resep favorit'), findsOneWidget);
   });
@@ -87,11 +89,10 @@ void main() {
     await tester.tap(find.byTooltip('Favorit (0)'));
     await tester.pumpAndSettle();
 
-    final clearButton = tester.widget<IconButton>(
-      find.byWidgetPredicate(
-        (widget) =>
-            widget is IconButton &&
-            widget.tooltip == 'Hapus semua favorit',
+    final clearButton = tester.widget<TextButton>(
+      find.descendant(
+        of: find.byTooltip('Hapus semua favorit'),
+        matching: find.byType(TextButton),
       ),
     );
     expect(clearButton.onPressed, isNull);
@@ -119,5 +120,35 @@ void main() {
       Theme.of(tester.element(find.text('ResepKu'))).brightness,
       Brightness.dark,
     );
+  });
+
+  testWidgets('switches between recipe list and grid', (tester) async {
+    await tester.pumpWidget(_createApp());
+
+    expect(find.byType(ListView), findsOneWidget);
+    await tester.tap(find.byTooltip('Tampilan grid'));
+    await tester.pumpAndSettle();
+    expect(find.byType(GridView), findsOneWidget);
+    expect(find.byTooltip('Tampilan list'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Tampilan list'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ListView), findsOneWidget);
+  });
+
+  testWidgets('favorite state persists when switching between grid and list', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_createApp());
+
+    await tester.tap(find.byTooltip('Tampilan grid'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Tambah ke favorit').first);
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Hapus dari favorit').first, findsOneWidget);
+
+    await tester.tap(find.byTooltip('Tampilan list'));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Hapus dari favorit').first, findsOneWidget);
   });
 }

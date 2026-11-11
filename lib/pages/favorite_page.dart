@@ -39,12 +39,15 @@ class FavoritePage extends StatelessWidget {
           appBar: AppBar(
             title: const Text('Favorit'),
             actions: [
-              TextButton.icon(
-                onPressed: favorites.count == 0
-                    ? null
-                    : () => _confirmClear(context),
-                icon: const Icon(Icons.delete_sweep),
-                label: const Text('Hapus semua'),
+              Tooltip(
+                message: 'Hapus semua favorit',
+                child: TextButton.icon(
+                  onPressed: favorites.count == 0
+                      ? null
+                      : () => _confirmClear(context),
+                  icon: const Icon(Icons.delete_sweep),
+                  label: const Text('Hapus semua'),
+                ),
               ),
             ],
           ),

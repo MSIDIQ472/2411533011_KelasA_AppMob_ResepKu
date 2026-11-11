@@ -29,10 +29,12 @@ class ResepKuApp extends StatelessWidget {
       theme: ThemeData(
         colorSchemeSeed: Colors.deepOrange,
         brightness: Brightness.light,
+        fontFamily: 'Poppins',
       ),
       darkTheme: ThemeData(
         colorSchemeSeed: Colors.deepOrange,
         brightness: Brightness.dark,
+        fontFamily: 'Poppins',
       ),
       themeMode: themeMode,
       builder: (context, child) =>

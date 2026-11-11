@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:appmob_resepku/models/recipes.dart';
 import 'package:appmob_resepku/pages/detail_page.dart';
 import 'package:appmob_resepku/providers/favorite_provider.dart';
+import 'package:appmob_resepku/widgets/recipe_image.dart';
 import 'package:provider/provider.dart';
 
 class RecipeTile extends StatelessWidget {
@@ -13,7 +14,14 @@ class RecipeTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<FavoriteProvider>(
       builder: (context, favorites, _) => ListTile(
-        leading: CircleAvatar(child: Text(recipe.name.substring(0, 1))),
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: SizedBox(
+            width: 56,
+            height: 56,
+            child: RecipeImage(url: recipe.image, cacheWidth: 168),
+          ),
+        ),
         title: Text(recipe.name),
         subtitle: Text(
           '${recipe.cuisine} • ${recipe.totalTimeMinutes} menit • '
