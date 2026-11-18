@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:appmob_resepku/pages/home_page.dart';
 import 'package:appmob_resepku/providers/favorite_provider.dart';
 import 'package:appmob_resepku/providers/theme_provider.dart';
+import 'package:appmob_resepku/services/recipe_service.dart';
 import 'package:appmob_resepku/widgets/identity_footer.dart';
 import 'package:provider/provider.dart';
 
@@ -11,6 +12,10 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (_) => FavoriteProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        Provider(
+          create: (_) => RecipeService(),
+          dispose: (_, service) => service.close(),
+        ),
       ],
       child: const ResepKuApp(),
     ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:appmob_resepku/models/recipes.dart';
 import 'package:appmob_resepku/providers/favorite_provider.dart';
+import 'package:appmob_resepku/services/recipe_service.dart';
 import 'package:appmob_resepku/widgets/recipe_image.dart';
 import 'package:provider/provider.dart';
 
@@ -20,6 +21,98 @@ class _DetailPageState extends State<DetailPage> {
   void initState() {
     super.initState();
     _servings = widget.recipe.servings;
+  }
+
+  Future<void> _renameRecipe() async {
+    var updatedName = widget.recipe.name;
+    final name = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Ubah nama resep'),
+        content: TextFormField(
+          initialValue: updatedName,
+          autofocus: true,
+          decoration: const InputDecoration(labelText: 'Nama resep'),
+          onChanged: (value) => updatedName = value,
+          onFieldSubmitted: (value) => Navigator.pop(context, value.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final value = updatedName.trim();
+              if (value.isNotEmpty) Navigator.pop(context, value);
+            },
+            child: const Text('Simpan'),
+          ),
+        ],
+      ),
+    );
+    if (name == null || !mounted) return;
+
+    final service = context.read<RecipeService>();
+    try {
+      final updated = await service.updateRecipe(
+        id: widget.recipe.id,
+        name: name,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Nama resep diperbarui menjadi "${updated.name}"'),
+        ),
+      );
+    } on Object catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal mengubah resep: $error')));
+    }
+  }
+
+  Future<void> _deleteRecipe() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Hapus resep?'),
+        content: Text('Resep "${widget.recipe.name}" akan dihapus.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final service = context.read<RecipeService>();
+    try {
+      final result = await service.deleteRecipe(widget.recipe.id);
+      if (!mounted) return;
+      if (result['isDeleted'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('"${widget.recipe.name}" berhasil dihapus.')),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Server tidak menghapus resep.')),
+        );
+      }
+    } on Object catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal menghapus resep: $error')));
+    }
   }
 
   @override
@@ -43,6 +136,20 @@ class _DetailPageState extends State<DetailPage> {
                 ),
               );
             },
+          ),
+          PopupMenuButton<String>(
+            tooltip: 'Aksi resep',
+            onSelected: (action) {
+              if (action == 'rename') {
+                _renameRecipe();
+              } else {
+                _deleteRecipe();
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(value: 'rename', child: Text('Ubah nama')),
+              PopupMenuItem(value: 'delete', child: Text('Hapus resep')),
+            ],
           ),
         ],
       ),
@@ -106,6 +213,19 @@ class _DetailPageState extends State<DetailPage> {
                 leading: const Icon(Icons.circle, size: 8),
                 title: Text(ingredient),
               ),
+            if (recipe.instructions.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              Text('Langkah', style: Theme.of(context).textTheme.titleLarge),
+              for (final (index, step) in recipe.instructions.indexed)
+                ListTile(
+                  dense: true,
+                  leading: CircleAvatar(
+                    radius: 12,
+                    child: Text('${index + 1}'),
+                  ),
+                  title: Text(step),
+                ),
+            ],
           ],
         ),
       ),

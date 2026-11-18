@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:appmob_resepku/providers/favorite_provider.dart';
-import 'package:appmob_resepku/widgets/recipe_tile.dart';
 import 'package:provider/provider.dart';
+import 'package:appmob_resepku/providers/favorite_provider.dart';
+import 'package:appmob_resepku/widgets/recipe_image.dart';
 
 class FavoritePage extends StatelessWidget {
   const FavoritePage({super.key});
@@ -32,34 +32,71 @@ class FavoritePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<FavoriteProvider>(
-      builder: (context, favorites, _) {
-        final isEmpty = favorites.items.isEmpty;
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Favorit'),
-            actions: [
-              Tooltip(
-                message: 'Hapus semua favorit',
-                child: TextButton.icon(
-                  onPressed: favorites.count == 0
-                      ? null
-                      : () => _confirmClear(context),
-                  icon: const Icon(Icons.delete_sweep),
-                  label: const Text('Hapus semua'),
-                ),
-              ),
-            ],
+    final favorites = context.watch<FavoriteProvider>().items;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Favorit'),
+        actions: [
+          Tooltip(
+            message: 'Hapus semua favorit',
+            child: TextButton.icon(
+              onPressed: favorites.isEmpty
+                  ? null
+                  : () => _confirmClear(context),
+              icon: const Icon(Icons.delete_sweep),
+              label: const Text('Hapus semua'),
+            ),
           ),
-          body: isEmpty
-              ? const Center(child: Text('Belum ada resep favorit'))
-              : ListView.builder(
-                  itemCount: favorites.items.length,
-                  itemBuilder: (context, index) =>
-                      RecipeTile(recipe: favorites.items[index]),
-                ),
-        );
-      },
+        ],
+      ),
+      body: favorites.isEmpty
+          ? const Center(child: Text('Belum ada resep favorit'))
+          : ListView.separated(
+              itemCount: favorites.length,
+              separatorBuilder: (context, index) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final recipe = favorites[index];
+                return Dismissible(
+                  key: ValueKey(recipe.id), // unik dan stabil, bukan index
+                  direction: DismissDirection.endToStart, // geser ke kiri
+                  background: Container(
+                    color: Colors.red,
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: 16),
+                    child: const Icon(Icons.delete, color: Colors.white),
+                  ),
+                  onDismissed: (_) {
+                    context.read<FavoriteProvider>().toggle(recipe);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('${recipe.name} dihapus dari favorit'),
+                      ),
+                    );
+                  },
+                  child: ListTile(
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: SizedBox(
+                        width: 56,
+                        height: 56,
+                        child: RecipeImage(url: recipe.image, cacheWidth: 168),
+                      ),
+                    ),
+                    title: Text(recipe.name),
+                    subtitle: Text(
+                      '${recipe.cuisine} • ${recipe.totalTimeMinutes} menit • ★ ${recipe.rating}',
+                    ),
+                    trailing: IconButton(
+                      tooltip: 'Hapus dari favorit',
+                      onPressed: () =>
+                          context.read<FavoriteProvider>().toggle(recipe),
+                      icon: const Icon(Icons.favorite, color: Colors.red),
+                    ),
+                  ),
+                );
+              },
+            ),
     );
   }
 }
